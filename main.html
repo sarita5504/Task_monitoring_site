@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Task Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            
+            background-color: #222;
+            color: #fff;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .left {
+            width: 20%;
+            background-color: #121212;
+            padding: 20px;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .left ul {
+            list-style: none;
+            padding: 0;
+        }
+        .left ul li {
+            margin: 15px 0;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .left ul li:hover {
+            background-color: #333;
+            border-radius: 5px;
+        }
+
+        .left ul li i {
+            margin-right: 10px;
+        }
+        .sign-out {
+            background-color: #121212;
+            color: white;
+            padding: 10px;
+            align-items: center;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+        .sign-out:hover {
+            background-color: #333;
+        }
+        .right {
+            width: 80%;
+            padding: 20px;
+        }
+        .header {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .task-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .task-card, .add-task {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            width: calc(30% - 10px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .task-card h3, .add-task {
+            font-size: 18px;
+        }
+        .task-card p {
+            font-size: 14px;
+            color: #aaa;
+            word-wrap: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 40px;
+            line-height: 1.4em;
+        }
+        .task-card .date-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .task-card .status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 12px;
+        }
+        .status.completed {
+            background-color: #28a745;
+        }
+        .status.important {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .status.incomplete {
+            background-color: #dc3545;
+        }
+        .task-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .task-actions i {
+            cursor: pointer;
+        }
+        .add-task {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            border: 1px dashed #aaa;
+            color: #aaa;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            color: #fff;
+            position: relative;
+        }
+        .modal h2 {
+            margin-bottom: 20px;
+        }
+        .modal label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .modal input[type="text"],
+        .modal textarea,
+        .modal input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #444;
+            border: none;
+            color: #fff;
+            border-radius: 5px;
+        }
+        .checkbox-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+        }
+        .create-task-btn {
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .button-box {
+            background: #FCFCFC;
+            border-radius: 20px;
+            outline: 0;
+            border: none;
+            box-shadow: 2px 2px 10px rgba(119, 119, 119, 0.5);
+            transition: all 0.5s ease-in-out;
+            margin-top: 1rem;
+            padding: 12px 10px;
+        }
+
+        .button-box:hover {
+            background: #efefef;
+            transform: scale(1.05);
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+
+        .green {
+            color: #4ec07d;
+        }
+
+        .red {
+            color: #e96075;
+        }
+
+        .button-box span {
+            font-size: 0.9em;
+            font-weight: 100;
+            letter-spacing: 3px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        /* =========================== */
+        /* Confirmation popup styling */
+        /* =========================== */
+        .overlay {
+            position: relative;
+        }
+
+        .overlay::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .confirm {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            min-width: 280px;
+            max-width: 500px;
+            height: auto;
+            background: #333;
+            border-radius: 10px;
+            padding: 0;
+            margin: 0;
+            border-top: 1px solid white;
+            animation: fade 0.5s ease 1 forwards;
+        }
+
+        .confirm h1 {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 1.5rem 1rem 0.5rem;
+        }
+
+        .confirm p {
+            text-align: center;
+            font-size: 1rem;
+            margin: 0 2rem 4.5rem;
+        }
+
+        .confirm button {
+            background: transparent;
+            border: none;
+            color: #1678E5;
+            height: 3rem;
+            font-size: 1rem;
+            width: 50%;
+            position: absolute;
+            bottom: 0;
+            cursor: pointer;
+        }
+
+        .confirm button:nth-of-type(1) {
+            border-top: 1px solid #B4B4B4;
+            border-right: 1px solid #B4B4B4;
+            left: 0;
+            border-radius: 0 0 0 10px;
+        }
+
+        .confirm button:nth-of-type(2) {
+            border-top: 1px solid #B4B4B4;
+            right: 0;
+            border-radius: 0 0 10px 0;
+        }
+
+        .confirm button:focus,
+        .confirm button:hover {
+            font-weight: bold;
+            background: #EFEFEF;
+        }
+
+        .confirm button:active {
+            background: #D6D6D6;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+            <ul>
+                <li><i class="fa fa-home"></i> All Tasks</li>
+                <li><i class="fa fa-star"></i> Important!</li>
+                <li><i class="fa fa-check"></i> Completed!</li>
+                <li><i class="fa fa-list"></i> Do It Now</li>
+            </ul>
+            <div class="sign-out">
+                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+            </div>
+        </div>
+        <div class="right">
+            <div class="header">All Tasks</div>
+            <div class="task-list">
+                <div class="add-task" id="addTaskBtn">+ Add New Task</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModalBtn">&times;</span>
+            <h2 id="modalTitle">Create a Task</h2>
+            <form id="taskForm">
+                <label for="taskTitle">Title</label>
+                <input type="text" id="taskTitle" placeholder="Enter task title" required>
+                <label for="taskDesc">Description</label>
+                <textarea id="taskDesc" placeholder="Enter task description" required></textarea>
+                <label for="taskDate">Date</label>
+                <input type="date" id="taskDate" required>
+                <label>Task Status</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="radio" name="taskStatus" value="important" required> Important
+                    </label>
+                    <label>
+                        <input type="radio" name="taskStatus" value="completed"> Complete
+                    </label>
+                    <label>
+                        <input type="radio" name="taskStatus" value="incomplete"> Incomplete
+                    </label>
+                </div>
+                <button type="submit" class="create-task-btn">+ Create Task</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const taskModal = document.getElementById('taskModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const taskForm = document.getElementById('taskForm');
+        const taskList = document.querySelector('.task-list');
+        const modalTitle = document.getElementById('modalTitle');
+
+        let editingTask = null; 
+
+        addTaskBtn.onclick = () => {
+            taskModal.style.display = 'flex';
+            resetModal();
+        };
+        closeModalBtn.onclick = () => taskModal.style.display = 'none';
+        window.onclick = (e) => { if (e.target == taskModal) taskModal.style.display = 'none'; };
+
+        taskForm.onsubmit = (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('taskTitle').value;
+            const desc = document.getElementById('taskDesc').value;
+            const date = document.getElementById('taskDate').value;
+            const status = document.querySelector('input[name="taskStatus"]:checked').value;
+
+            if (editingTask) {
+                
+                editingTask.querySelector('h3').textContent = title;
+                editingTask.querySelector('p').textContent = desc;
+                editingTask.querySelector('.date').textContent = date;
+                const statusElem = editingTask.querySelector('.status');
+                statusElem.textContent = capitalize(status);
+                statusElem.className = `status ${status}`;
+                editingTask = null;
+            } else {
+                
+                const taskCard = document.createElement('div');
+                taskCard.className = 'task-card';
+                taskCard.innerHTML = `
+                    <h3>${title}</h3>
+                    <p>${desc}</p>
+                    <div class="date-status">
+                        <div class="date">${date}</div>
+                        <div class="status ${status}">${capitalize(status)}</div>
+                    </div>
+                    <div class="task-actions">
+                        <i class="fa fa-edit edit-btn"></i>
+                        <i class="fa fa-trash delete-btn"></i>
+                    </div>
+                `;
+
+                taskList.insertBefore(taskCard, addTaskBtn);
+
+               
+                taskCard.querySelector('.delete-btn').onclick = () => {
+                    deletingTask= taskCard;
+                    createDeleteConfirmationModal(taskCard)
+                };
+
+                taskCard.querySelector('.edit-btn').onclick = () => {
+                    editingTask = taskCard;
+                    openEditModal(taskCard);
+                };
+            }
+
+            taskModal.style.display = 'none';
+            taskForm.reset();
+        };
+
+        function createDeleteConfirmationModal(taskCard) {
+            const deleteButtons = taskCard.querySelectorAll(".delete-btn");
+        
+            deleteButtons.forEach(button => {
+                button.addEventListener("click", function () {
+                    const overlay = document.createElement("div");
+                    overlay.className = "overlay";
+        
+                    const confirmModal = document.createElement("div");
+                    confirmModal.className = "confirm";
+                    confirmModal.innerHTML = `
+                        <h1>Confirm your action</h1>
+                        <p>Are you <strong>really</strong> sure that you want to delete this task?</p>
+                        <button class="cancel">Cancel</button>
+                        <button class="confirmed">Confirm</button>
+                    `;
+        
+                    document.body.appendChild(overlay);
+                    document.body.appendChild(confirmModal);
+                    overlay.style.display = "block";
+                    confirmModal.style.display = "block";
+        
+                    confirmModal.querySelector(".confirmed").addEventListener("click", function () {
+                        taskList.removeChild(taskCard);
+                        overlay.remove();
+                        confirmModal.remove();
+                    });
+        
+                    confirmModal.querySelector(".cancel").addEventListener("click", function () {
+                        overlay.remove();
+                        confirmModal.remove();
+                    });
+                });
+            });
+        }
+        
+        /* Example usage (assuming you have a taskCard element):
+        document.addEventListener("DOMContentLoaded", function () {
+          const taskCards = document.querySelectorAll('.task-card'); // select all task cards.
+          taskCards.forEach(card => {
+            createDeleteConfirmationModal(card);
+          });
+        });*/
+
+        function resetModal() {
+            modalTitle.textContent = 'Create a Task';
+            taskForm.querySelector('.create-task-btn').textContent = '+ Create Task';
+            taskForm.reset();
+        }
+        
+
+        function openEditModal(taskCard) {
+            modalTitle.textContent = 'Edit Task';
+            taskForm.querySelector('.create-task-btn').textContent = 'Save Changes';
+            taskModal.style.display = 'flex';
+
+            document.getElementById('taskTitle').value = taskCard.querySelector('h3').textContent;
+            document.getElementById('taskDesc').value = taskCard.querySelector('p').textContent;
+            document.getElementById('taskDate').value = taskCard.querySelector('.date').textContent;
+
+            const status = taskCard.querySelector('.status').classList[1];
+            document.querySelector(`input[name="taskStatus"][value="${status}"]`).checked = true;
+        }
+
+        function capitalize(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+       
+document.querySelectorAll('.left ul li').forEach((category) => {
+    category.addEventListener('click', () => {
+        const selectedCategory = category.textContent.trim().toLowerCase();
+        filterTasks(selectedCategory);
+
+        
+        const header = document.querySelector('.header');
+        header.textContent = selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1);
+    });
+});
+
+function filterTasks(category) {
+    const tasks = document.querySelectorAll('.task-card');
+    tasks.forEach((task) => {
+        const status = task.querySelector('.status').classList[1]; 
+        if (category === 'all tasks') {
+            task.style.display = 'flex'; 
+        } else if (category === 'do it now') {
+            
+            task.style.display = status === 'incomplete' ? 'flex' : 'none';
+        } 
+        else if (category === 'completed!') {
+            
+            task.style.display = status === 'completed' ? 'flex' : 'none';
+        } 
+        else if (category === 'important!') {
+            
+            task.style.display = status === 'important' ? 'flex' : 'none';
+        } 
+        else {
+            task.style.display = status === category ? 'flex' : 'none'; 
+        }
+    });
+}
+
+    </script>
+</body>
+</html>
